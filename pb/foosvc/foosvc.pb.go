@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -163,6 +165,14 @@ func (c *foosvcClient) Foo(ctx context.Context, in *FooRequest, opts ...grpc.Cal
 // FoosvcServer is the server API for Foosvc service.
 type FoosvcServer interface {
 	Foo(context.Context, *FooRequest) (*FooReply, error)
+}
+
+// UnimplementedFoosvcServer can be embedded to have forward compatible implementations.
+type UnimplementedFoosvcServer struct {
+}
+
+func (*UnimplementedFoosvcServer) Foo(ctx context.Context, req *FooRequest) (*FooReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Foo not implemented")
 }
 
 func RegisterFoosvcServer(s *grpc.Server, srv FoosvcServer) {
