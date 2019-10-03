@@ -23,3 +23,13 @@ type ConcatRequest struct {
 func (r ConcatRequest) validate() error {
 	return nil // TBA
 }
+
+// ProduceRequest produce the message
+type ProduceRequest struct {
+	Topic string `json:"topic"`
+	Msg   string `json:"msg"`
+}
+
+func (r ProduceRequest) validate() error {
+	return nil // TBA
+}

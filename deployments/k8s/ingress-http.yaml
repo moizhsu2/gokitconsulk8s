@@ -4,12 +4,13 @@ kind: Service
 metadata:
   name: ingress-http
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: ingress-http
   ports:
     - name: http
       protocol: TCP
+      nodePort: 30080
       port: 8080
       targetPort: 80
 

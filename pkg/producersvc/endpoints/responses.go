@@ -2,7 +2,7 @@ package endpoints
 
 import (
 	"net/http"
-	
+
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -14,6 +14,10 @@ var (
 	_ httptransport.Headerer = (*ConcatResponse)(nil)
 
 	_ httptransport.StatusCoder = (*ConcatResponse)(nil)
+
+	_ httptransport.Headerer = (*ProduceResponse)(nil)
+
+	_ httptransport.StatusCoder = (*ProduceResponse)(nil)
 )
 
 // SumResponse collects the response values for the Sum method.
@@ -44,3 +48,16 @@ func (r ConcatResponse) Headers() http.Header {
 	return http.Header{}
 }
 
+// ProduceResponse .
+type ProduceResponse struct {
+	Rs  string `json:"rs"`
+	Err error  `json:"err"`
+}
+
+func (r ProduceResponse) StatusCode() int {
+	return http.StatusOK // TBA
+}
+
+func (r ProduceResponse) Headers() http.Header {
+	return http.Header{}
+}

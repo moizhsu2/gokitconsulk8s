@@ -33,13 +33,14 @@ const (
 	defServiceHost string = "localhost"
 	defHTTPPort    string = "8180"
 	defGRPCPort    string = "8181"
+
 	envZipkinV2URL string = "QS_ZIPKIN_V2_URL"
-	envNameSpace   string = "QS_ADDSVC_NAMESPACE"
-	envServiceName string = "QS_ADDSVC_SERVICE_NAME"
-	envLogLevel    string = "QS_ADDSVC_LOG_LEVEL"
-	envServiceHost string = "QS_ADDSVC_SERVICE_HOST"
-	envHTTPPort    string = "QS_ADDSVC_HTTP_PORT"
-	envGRPCPort    string = "QS_ADDSVC_GRPC_PORT"
+	envNameSpace   string = "QS_PRODUCERSVC_NAMESPACE"
+	envServiceName string = "QS_PRODUCERSVC_SERVICE_NAME"
+	envLogLevel    string = "QS_PRODUCERSVC_LOG_LEVEL"
+	envServiceHost string = "QS_PRODUCERSVC_SERVICE_HOST"
+	envHTTPPort    string = "QS_PRODUCERSVC_HTTP_PORT"
+	envGRPCPort    string = "QS_PRODUCERSVC_GRPC_PORT"
 )
 
 type config struct {

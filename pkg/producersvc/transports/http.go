@@ -75,6 +75,12 @@ func NewHTTPHandler(endpoints endpoints.Endpoints, otTracer stdopentracing.Trace
 		httptransport.EncodeJSONResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Concat", logger)))...,
 	))
+	m.Handle("/produce", httptransport.NewServer(
+		endpoints.ProduceEndpoint,
+		decodeHTTPProduceRequest,
+		httptransport.EncodeJSONResponse,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Concat", logger)))...,
+	))
 	return m
 }
 
@@ -173,6 +179,25 @@ func NewHTTPClient(instance string, otTracer stdopentracing.Tracer, zipkinTracer
 		e.ConcatEndpoint = concatEndpoint
 	}
 
+	var produceEndpoint endpoint.Endpoint
+	{
+		produceEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/produce"),
+			encodeHTTPProduceRequest,
+			decodeHTTPProduceResponse,
+			append(options, httptransport.ClientBefore(opentracing.ContextToHTTP(otTracer, logger)))...,
+		).Endpoint()
+		produceEndpoint = opentracing.TraceClient(otTracer, "Produce")(produceEndpoint)
+		produceEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Produce")(produceEndpoint)
+		produceEndpoint = limiter(produceEndpoint)
+		produceEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Produce",
+			Timeout: 30 * time.Second,
+		}))(produceEndpoint)
+		e.ProduceEndpoint = produceEndpoint
+	}
+
 	// Returning the endpoint.Set as a service.Service relies on the
 	// endpoint.Set implementing the Service methods. That's just a simple bit
 	// of glue code.
@@ -232,6 +257,40 @@ func decodeHTTPConcatResponse(_ context.Context, r *http.Response) (interface{},
 	var resp endpoints.ConcatResponse
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return resp, err
+}
+
+//-------
+
+// decodeHTTPSumResponse is a transport/http.DecodeResponseFunc that decodes a
+// JSON-encoded sum response from the HTTP response body. If the response has a
+// non-200 status code, we will interpret that as an error and attempt to decode
+// the specific error message from the response body. Primarily useful in a client.
+func decodeHTTPProduceResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, JSONErrorDecoder(r)
+	}
+	var resp endpoints.ProduceResponse
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return resp, err
+}
+
+// encodeHTTPProduceRequest is a transport/http.EncodeRequestFunc that
+// JSON-encodes any request to the request body. Primarily useful in a client.
+func encodeHTTPProduceRequest(_ context.Context, r *http.Request, request interface{}) (err error) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(request); err != nil {
+		return err
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// decodeHTTPProduceRequest is a transport/http.DecodeRequestFunc that decodes a
+// JSON-encoded request from the HTTP request body. Primarily useful in a server.
+func decodeHTTPProduceRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req endpoints.ProduceRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
 }
 
 func httpEncodeError(_ context.Context, err error, w http.ResponseWriter) {

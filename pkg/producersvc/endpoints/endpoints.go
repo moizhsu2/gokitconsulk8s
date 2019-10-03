@@ -21,8 +21,9 @@ import (
 // meant to be used as a helper struct, to collect all of the endpoints into a
 // single parameter.
 type Endpoints struct {
-	SumEndpoint    endpoint.Endpoint `json:""`
-	ConcatEndpoint endpoint.Endpoint `json:""`
+	SumEndpoint     endpoint.Endpoint `json:""`
+	ConcatEndpoint  endpoint.Endpoint `json:""`
+	ProduceEndpoint endpoint.Endpoint `json:""`
 }
 
 // New return a new instance of the endpoint that wraps the provided service.
@@ -49,6 +50,18 @@ func New(svc service.ProducersvcService, logger log.Logger, otTracer stdopentrac
 		concatEndpoint = zipkin.TraceEndpoint(zipkinTracer, method)(concatEndpoint)
 		concatEndpoint = LoggingMiddleware(log.With(logger, "method", method))(concatEndpoint)
 		ep.ConcatEndpoint = concatEndpoint
+	}
+
+	var produceEndpoint endpoint.Endpoint
+	{
+		method := "produce"
+		produceEndpoint = MakeProduceEndpoint(svc)
+		produceEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))(produceEndpoint)
+		produceEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(produceEndpoint)
+		produceEndpoint = opentracing.TraceServer(otTracer, method)(produceEndpoint)
+		produceEndpoint = zipkin.TraceEndpoint(zipkinTracer, method)(produceEndpoint)
+		produceEndpoint = LoggingMiddleware(log.With(logger, "method", method))(produceEndpoint)
+		ep.ProduceEndpoint = produceEndpoint
 	}
 
 	return ep
@@ -99,5 +112,27 @@ func (e Endpoints) Concat(ctx context.Context, a string, b string) (rs string, e
 		return
 	}
 	response := resp.(ConcatResponse)
+	return response.Rs, nil
+}
+
+// MakeConcatEndpoint returns an endpoint that invokes Concat on the service.
+// Primarily useful in a server.
+func MakeProduceEndpoint(svc service.ProducersvcService) (ep endpoint.Endpoint) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(ProduceRequest)
+		if err := req.validate(); err != nil {
+			return ProduceResponse{}, err
+		}
+		rs, err := svc.Produce(ctx, req.Topic, req.Msg)
+		return ProduceResponse{Rs: rs}, err
+	}
+}
+
+func (e Endpoints) Produce(ctx context.Context, topic, msg string) (rs string, err error) {
+	resp, err := e.ConcatEndpoint(ctx, ProduceRequest{Topic: topic, Msg: msg})
+	if err != nil {
+		return
+	}
+	response := resp.(ProduceResponse)
 	return response.Rs, nil
 }

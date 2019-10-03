@@ -1,5 +1,5 @@
 BUILD_DIR = build
-SERVICES = addsvc foosvc router
+SERVICES = addsvc foosvc router producersvc
 DOCKERS_CLEANBUILD = $(addprefix prod_docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix dev_docker_,$(SERVICES))
 DOCKERS_DEBUG = $(addprefix debug_docker_,$(SERVICES))
@@ -19,15 +19,15 @@ define compile_debug_service
 endef
 
 define make_docker_cleanbuild
-	docker build --no-cache --build-arg SVC_NAME=$(subst prod_docker_,,$(1)) --tag=cage1016/gokitconsulk8s-$(subst prod_docker_,,$(1)) -f deployments/docker/Dockerfile .
+	docker build --no-cache --build-arg SVC_NAME=$(subst prod_docker_,,$(1)) --tag=moizhsu/gokitconsulk8s-$(subst prod_docker_,,$(1)) -f deployments/docker/Dockerfile .
 endef
 
 define make_docker_dev
-	docker build --build-arg SVC_NAME=$(subst dev_docker_,,$(1)) --tag=cage1016/gokitconsulk8s-$(subst dev_docker_,,$(1)) -f deployments/docker/Dockerfile.dev ./build
+	docker build --build-arg SVC_NAME=$(subst dev_docker_,,$(1)) --tag=moizhsu/gokitconsulk8s-$(subst dev_docker_,,$(1)) -f deployments/docker/Dockerfile.dev ./build
 endef
 
 define make_docker_debug
-	docker build --build-arg SVC_NAME=$(subst debug_docker_,,$(1)) --tag=cage1016/gokitconsulk8s-debug-$(subst debug_docker_,,$(1)) -f deployments/docker/Dockerfile.debug ./build
+	docker build --build-arg SVC_NAME=$(subst debug_docker_,,$(1)) --tag=moizhsu/gokitconsulk8s-debug-$(subst debug_docker_,,$(1)) -f deployments/docker/Dockerfile.debug ./build
 endef
 
 all: $(SERVICES)

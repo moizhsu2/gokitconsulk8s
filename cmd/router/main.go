@@ -32,27 +32,29 @@ import (
 const grpcRouterReg = `([a-zA-Z]+)/`
 
 const (
-	defZipkinV2URL   = ""
-	defNameSpace     = "gokitconsulk8s"
-	defServiceName   = "router"
-	defLogLevel      = "error"
-	defHTTPPort      = ""
-	defGRPCPort      = ""
-	defRretryTimeout = "500" // time.Millisecond
-	defRretryMax     = "3"
-	defAddsvcURL     = ""
-	defFoosvcURL     = ""
+	defZipkinV2URL    = ""
+	defNameSpace      = "gokitconsulk8s"
+	defServiceName    = "router"
+	defLogLevel       = "error"
+	defHTTPPort       = ""
+	defGRPCPort       = ""
+	defRretryTimeout  = "500" // time.Millisecond
+	defRretryMax      = "3"
+	defAddsvcURL      = ""
+	defFoosvcURL      = ""
+	defProducersvcURL = ""
 
-	envZipkinV2URL  = "QS_ZIPKIN_V2_URL"
-	envNameSpace    = "QS_ROUTER_NAMESPACE"
-	envServiceName  = "QS_ROUTER_SERVICE_NAME"
-	envLogLevel     = "QS_ROUTER_LOG_LEVEL"
-	envHTTPPort     = "QS_ROUTER_HTTP_PORT"
-	envGRPCPort     = "QS_ROUTER_GRPC_PORT"
-	envRetryMax     = "QS_ROUTER_RETRY_MAX"
-	envRetryTimeout = "QS_ROUTER_RETRY_TIMEOUT"
-	envAddsvcURL    = "QS_ADDSVC_URL"
-	envFoosvcURL    = "QS_FOOSVC_URL"
+	envZipkinV2URL    = "QS_ZIPKIN_V2_URL"
+	envNameSpace      = "QS_ROUTER_NAMESPACE"
+	envServiceName    = "QS_ROUTER_SERVICE_NAME"
+	envLogLevel       = "QS_ROUTER_LOG_LEVEL"
+	envHTTPPort       = "QS_ROUTER_HTTP_PORT"
+	envGRPCPort       = "QS_ROUTER_GRPC_PORT"
+	envRetryMax       = "QS_ROUTER_RETRY_MAX"
+	envRetryTimeout   = "QS_ROUTER_RETRY_TIMEOUT"
+	envAddsvcURL      = "QS_ADDSVC_URL"
+	envFoosvcURL      = "QS_FOOSVC_URL"
+	envProducersvcURL = "QS_PRODUCERSVC_URL"
 )
 
 // Env reads specified environment variable. If no value has been found,
@@ -65,18 +67,19 @@ func env(key string, fallback string) (s0 string) {
 }
 
 type config struct {
-	nameSpace    string
-	serviceName  string
-	logLevel     string
-	serviceHost  string
-	httpPort     string
-	grpcPort     string
-	zipkinV2URL  string
-	retryMax     int64
-	retryTimeout int64
-	addsvcURL    string
-	foosvcURL    string
-	routerMap    map[string]string
+	nameSpace      string
+	serviceName    string
+	logLevel       string
+	serviceHost    string
+	httpPort       string
+	grpcPort       string
+	zipkinV2URL    string
+	retryMax       int64
+	retryTimeout   int64
+	addsvcURL      string
+	foosvcURL      string
+	producersvcURL string
+	routerMap      map[string]string
 }
 
 func main() {
@@ -119,7 +122,7 @@ func main() {
 	ctx := context.Background()
 	errs := make(chan error, 1)
 
-	r := routertransport.MakeHandler(ctx, cfg.addsvcURL, cfg.foosvcURL, cfg.retryMax, cfg.retryMax, tracer, zipkinTracer, logger)
+	r := routertransport.MakeHandler(ctx, cfg.addsvcURL, cfg.foosvcURL, cfg.producersvcURL, cfg.retryMax, cfg.retryMax, tracer, zipkinTracer, logger)
 
 	go startHTTPServer(r, cfg.httpPort, logger, errs)
 	go startGRPCServer(zipkinTracer, cfg.grpcPort, cfg.routerMap, logger, errs)
@@ -154,10 +157,12 @@ func loadConfig(logger log.Logger) (cfg config) {
 	cfg.retryTimeout = retryTimeout
 	cfg.addsvcURL = env(envAddsvcURL, defAddsvcURL)
 	cfg.foosvcURL = env(envFoosvcURL, defFoosvcURL)
+	cfg.producersvcURL = env(envProducersvcURL, defProducersvcURL)
 
 	cfg.routerMap = map[string]string{}
 	cfg.routerMap["addsvc"] = cfg.addsvcURL
 	cfg.routerMap["foosvc"] = cfg.foosvcURL
+	cfg.routerMap["producersvc"] = cfg.producersvcURL
 	return
 }
 

@@ -24,8 +24,9 @@ import (
 )
 
 type grpcServer struct {
-	sum    grpctransport.Handler `json:""`
-	concat grpctransport.Handler `json:""`
+	sum     grpctransport.Handler `json:""`
+	concat  grpctransport.Handler `json:""`
+	produce grpctransport.Handler `json:""`
 }
 
 func (s *grpcServer) Sum(ctx context.Context, req *pb.SumRequest) (rep *pb.SumReply, err error) {
@@ -43,6 +44,15 @@ func (s *grpcServer) Concat(ctx context.Context, req *pb.ConcatRequest) (rep *pb
 		return nil, grpcEncodeError(err)
 	}
 	rep = rp.(*pb.ConcatReply)
+	return rep, nil
+}
+
+func (s *grpcServer) Produce(ctx context.Context, req *pb.ProduceRequest) (rep *pb.ProduceReply, err error) {
+	_, rp, err := s.produce.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, grpcEncodeError(err)
+	}
+	rep = rp.(*pb.ProduceReply)
 	return rep, nil
 }
 
@@ -77,7 +87,21 @@ func MakeGRPCServer(endpoints endpoints.Endpoints, otTracer stdopentracing.Trace
 			encodeGRPCConcatResponse,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Concat", logger)))...,
 		),
+
+		produce: grpctransport.NewServer(
+			endpoints.ProduceEndpoint,
+			decodeGRPCProduceRequest,
+			encodeGRPCProduceResponse,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Produce", logger)))...,
+		),
 	}
+}
+
+// encodeGRPCSumRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain Sum request to a gRPC Sum request. Primarily useful in a client.
+func encodeGRPCSumRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(endpoints.SumRequest)
+	return &pb.SumRequest{A: req.A, B: req.B}, nil
 }
 
 // decodeGRPCSumRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -94,6 +118,20 @@ func encodeGRPCSumResponse(_ context.Context, grpcReply interface{}) (res interf
 	return &pb.SumReply{Rs: reply.Rs}, grpcEncodeError(reply.Err)
 }
 
+// decodeGRPCSumResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC Sum reply to a user-domain Sum response. Primarily useful in a client.
+func decodeGRPCSumResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.SumReply)
+	return endpoints.SumResponse{Rs: reply.Rs}, nil
+}
+
+// encodeGRPCConcatRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain Concat request to a gRPC Concat request. Primarily useful in a client.
+func encodeGRPCConcatRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(endpoints.ConcatRequest)
+	return &pb.ConcatRequest{A: req.A, B: req.B}, nil
+}
+
 // decodeGRPCConcatRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC request to a user-domain request. Primarily useful in a server.
 func decodeGRPCConcatRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -106,6 +144,13 @@ func decodeGRPCConcatRequest(_ context.Context, grpcReq interface{}) (interface{
 func encodeGRPCConcatResponse(_ context.Context, grpcReply interface{}) (res interface{}, err error) {
 	reply := grpcReply.(endpoints.ConcatResponse)
 	return &pb.ConcatReply{Rs: reply.Rs}, grpcEncodeError(reply.Err)
+}
+
+// decodeGRPCConcatResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC Concat reply to a user-domain Concat response. Primarily useful in a client.
+func decodeGRPCConcatResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.ConcatReply)
+	return endpoints.ConcatResponse{Rs: reply.Rs}, nil
 }
 
 // NewGRPCClient returns an AddService backed by a gRPC server at the other end
@@ -175,38 +220,61 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		}))(concatEndpoint)
 	}
 
+	var produceEndpoint endpoint.Endpoint
+	{
+		produceEndpoint = grpctransport.NewClient(
+			conn,
+			"pb.Producersvc",
+			"Produce",
+			encodeGRPCProduceRequest,
+			decodeGRPCProduceResponse,
+			pb.ProduceReply{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+		produceEndpoint = opentracing.TraceClient(otTracer, "Produce")(produceEndpoint)
+		produceEndpoint = limiter(produceEndpoint)
+		produceEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Produce",
+			Timeout: 30 * time.Second,
+		}))(produceEndpoint)
+	}
+
 	return endpoints.Endpoints{
-		SumEndpoint:    sumEndpoint,
-		ConcatEndpoint: concatEndpoint,
+		SumEndpoint:     sumEndpoint,
+		ConcatEndpoint:  concatEndpoint,
+		ProduceEndpoint: produceEndpoint,
 	}
 }
 
-// encodeGRPCSumRequest is a transport/grpc.EncodeRequestFunc that converts a
-// user-domain Sum request to a gRPC Sum request. Primarily useful in a client.
-func encodeGRPCSumRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(endpoints.SumRequest)
-	return &pb.SumRequest{A: req.A, B: req.B}, nil
-}
-
-// decodeGRPCSumResponse is a transport/grpc.DecodeResponseFunc that converts a
-// gRPC Sum reply to a user-domain Sum response. Primarily useful in a client.
-func decodeGRPCSumResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.SumReply)
-	return endpoints.SumResponse{Rs: reply.Rs}, nil
-}
-
-// encodeGRPCConcatRequest is a transport/grpc.EncodeRequestFunc that converts a
+// encodeGRPCProduceRequest is a transport/grpc.EncodeRequestFunc that converts a
 // user-domain Concat request to a gRPC Concat request. Primarily useful in a client.
-func encodeGRPCConcatRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(endpoints.ConcatRequest)
-	return &pb.ConcatRequest{A: req.A, B: req.B}, nil
+func encodeGRPCProduceRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(endpoints.ProduceRequest)
+	return &pb.ProduceRequest{Topic: req.Topic, Msg: req.Msg}, nil
+}
+
+// decodeGRPCProduceRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC request to a user-domain request. Primarily useful in a server.
+func decodeGRPCProduceRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ProduceRequest)
+	return endpoints.ProduceRequest{Topic: req.Topic, Msg: req.Msg}, nil
+}
+
+// encodeGRPCSumResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain response to a gRPC reply. Primarily useful in a server.
+func encodeGRPCProduceResponse(_ context.Context, grpcReply interface{}) (res interface{}, err error) {
+	reply := grpcReply.(endpoints.ProduceResponse)
+	if reply.Err != nil {
+		return &pb.ProduceReply{Rs: reply.Rs, Err: reply.Err.Error()}, grpcEncodeError(reply.Err)
+	}
+	return &pb.ProduceReply{Rs: reply.Rs, Err: ""}, grpcEncodeError(reply.Err)
 }
 
 // decodeGRPCConcatResponse is a transport/grpc.DecodeResponseFunc that converts a
 // gRPC Concat reply to a user-domain Concat response. Primarily useful in a client.
-func decodeGRPCConcatResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.ConcatReply)
-	return endpoints.ConcatResponse{Rs: reply.Rs}, nil
+func decodeGRPCProduceResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.ProduceReply)
+	return endpoints.ProduceResponse{Rs: reply.Rs}, nil
 }
 
 func grpcEncodeError(err error) error {

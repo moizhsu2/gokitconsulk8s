@@ -212,30 +212,129 @@ func (m *ConcatReply) GetErr() string {
 	return ""
 }
 
+type ProduceRequest struct {
+	Topic                string   `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProduceRequest) Reset()         { *m = ProduceRequest{} }
+func (m *ProduceRequest) String() string { return proto.CompactTextString(m) }
+func (*ProduceRequest) ProtoMessage()    {}
+func (*ProduceRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_db1344c2ca512e63, []int{4}
+}
+
+func (m *ProduceRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProduceRequest.Unmarshal(m, b)
+}
+func (m *ProduceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProduceRequest.Marshal(b, m, deterministic)
+}
+func (m *ProduceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProduceRequest.Merge(m, src)
+}
+func (m *ProduceRequest) XXX_Size() int {
+	return xxx_messageInfo_ProduceRequest.Size(m)
+}
+func (m *ProduceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProduceRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProduceRequest proto.InternalMessageInfo
+
+func (m *ProduceRequest) GetTopic() string {
+	if m != nil {
+		return m.Topic
+	}
+	return ""
+}
+
+func (m *ProduceRequest) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+type ProduceReply struct {
+	Rs                   string   `protobuf:"bytes,1,opt,name=rs,proto3" json:"rs,omitempty"`
+	Err                  string   `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProduceReply) Reset()         { *m = ProduceReply{} }
+func (m *ProduceReply) String() string { return proto.CompactTextString(m) }
+func (*ProduceReply) ProtoMessage()    {}
+func (*ProduceReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_db1344c2ca512e63, []int{5}
+}
+
+func (m *ProduceReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProduceReply.Unmarshal(m, b)
+}
+func (m *ProduceReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProduceReply.Marshal(b, m, deterministic)
+}
+func (m *ProduceReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProduceReply.Merge(m, src)
+}
+func (m *ProduceReply) XXX_Size() int {
+	return xxx_messageInfo_ProduceReply.Size(m)
+}
+func (m *ProduceReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProduceReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProduceReply proto.InternalMessageInfo
+
+func (m *ProduceReply) GetRs() string {
+	if m != nil {
+		return m.Rs
+	}
+	return ""
+}
+
+func (m *ProduceReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*SumRequest)(nil), "pb.SumRequest")
 	proto.RegisterType((*SumReply)(nil), "pb.SumReply")
 	proto.RegisterType((*ConcatRequest)(nil), "pb.ConcatRequest")
 	proto.RegisterType((*ConcatReply)(nil), "pb.ConcatReply")
+	proto.RegisterType((*ProduceRequest)(nil), "pb.ProduceRequest")
+	proto.RegisterType((*ProduceReply)(nil), "pb.ProduceReply")
 }
 
 func init() { proto.RegisterFile("producersvc.proto", fileDescriptor_db1344c2ca512e63) }
 
 var fileDescriptor_db1344c2ca512e63 = []byte{
-	// 200 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2c, 0x28, 0xca, 0x4f,
-	0x29, 0x4d, 0x4e, 0x2d, 0x2a, 0x2e, 0x4b, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2a,
-	0x48, 0x52, 0xd2, 0xe0, 0xe2, 0x0a, 0x2e, 0xcd, 0x0d, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x11,
-	0xe2, 0xe1, 0x62, 0x4c, 0x94, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x0e, 0x62, 0x4c, 0x04, 0xf1, 0x92,
-	0x24, 0x98, 0x20, 0xbc, 0x24, 0x25, 0x1d, 0x2e, 0x0e, 0xb0, 0xca, 0x82, 0x9c, 0x4a, 0x21, 0x3e,
-	0x2e, 0xa6, 0xa2, 0x62, 0xa8, 0x42, 0xa6, 0xa2, 0x62, 0x21, 0x01, 0x2e, 0xe6, 0xd4, 0xa2, 0x22,
-	0xb0, 0x5a, 0xce, 0x20, 0x10, 0x53, 0x49, 0x9b, 0x8b, 0xd7, 0x39, 0x3f, 0x2f, 0x39, 0xb1, 0x04,
-	0xc3, 0x68, 0x4e, 0x14, 0xa3, 0x39, 0x41, 0x46, 0xeb, 0x73, 0x71, 0xc3, 0x14, 0xa3, 0x9a, 0xce,
-	0x89, 0xdd, 0x74, 0xa3, 0x14, 0x2e, 0xee, 0x00, 0x84, 0x77, 0x84, 0x54, 0xb9, 0x98, 0x83, 0x4b,
-	0x73, 0x85, 0xf8, 0xf4, 0x0a, 0x92, 0xf4, 0x10, 0xbe, 0x91, 0xe2, 0x81, 0xf3, 0x0b, 0x72, 0x2a,
-	0x95, 0x18, 0x84, 0xf4, 0xb8, 0xd8, 0x20, 0xd6, 0x08, 0x09, 0x82, 0x64, 0x50, 0xdc, 0x27, 0xc5,
-	0x8f, 0x2c, 0x04, 0x56, 0x9f, 0xc4, 0x06, 0x0e, 0x26, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x04, 0x4c, 0x3e, 0x08, 0x3b, 0x01, 0x00, 0x00,
+	// 255 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0xdf, 0x4a, 0xc3, 0x30,
+	0x14, 0xc6, 0x4d, 0x8b, 0xd3, 0x7e, 0xab, 0x75, 0x3b, 0x78, 0x31, 0x7a, 0x25, 0x01, 0x61, 0xa0,
+	0xd4, 0x7f, 0x37, 0xde, 0xfb, 0x02, 0xa3, 0x7b, 0x82, 0xa6, 0x96, 0x21, 0xac, 0x26, 0x26, 0xad,
+	0xb0, 0x27, 0xf1, 0x75, 0x25, 0x49, 0xbb, 0x19, 0x44, 0xd8, 0x5d, 0xbe, 0x73, 0xbe, 0xef, 0x77,
+	0x38, 0x27, 0x98, 0x2b, 0x2d, 0xdf, 0xfa, 0xba, 0xd1, 0xe6, 0xab, 0x2e, 0x94, 0x96, 0x9d, 0xa4,
+	0x48, 0x09, 0xbe, 0x04, 0xd6, 0x7d, 0x5b, 0x36, 0x9f, 0x7d, 0x63, 0x3a, 0x4a, 0xc1, 0xaa, 0x05,
+	0xbb, 0x66, 0xcb, 0xb8, 0x64, 0x95, 0x55, 0x62, 0x11, 0x79, 0x25, 0xf8, 0x1d, 0xce, 0x9d, 0x53,
+	0x6d, 0x77, 0x94, 0x21, 0xd2, 0x66, 0x30, 0x46, 0xda, 0xd0, 0x0c, 0x71, 0xa3, 0xb5, 0xf3, 0x26,
+	0xa5, 0x7d, 0xf2, 0x5b, 0x5c, 0xbc, 0xca, 0x8f, 0xba, 0xea, 0xfe, 0xa0, 0x93, 0x00, 0x9d, 0x58,
+	0xf4, 0x3d, 0xa6, 0xa3, 0x39, 0xa4, 0x27, 0xff, 0xd0, 0x5f, 0x90, 0xad, 0xfc, 0x3a, 0x23, 0xfe,
+	0x0a, 0xa7, 0x9d, 0x54, 0xef, 0xf5, 0x10, 0xf3, 0xc2, 0x26, 0x5b, 0xb3, 0x19, 0x93, 0xad, 0xd9,
+	0xf0, 0x07, 0xa4, 0xfb, 0xe4, 0x51, 0xb3, 0x9e, 0xbe, 0x19, 0xa6, 0xab, 0xc3, 0xed, 0xe8, 0x06,
+	0xf1, 0xba, 0x6f, 0x29, 0x2b, 0x94, 0x28, 0x0e, 0xa7, 0xcb, 0xd3, 0xbd, 0x56, 0xdb, 0x1d, 0x3f,
+	0xa1, 0x02, 0x13, 0xbf, 0x13, 0xcd, 0x6d, 0x27, 0x38, 0x46, 0x7e, 0xf9, 0xbb, 0xe4, 0xfd, 0x8f,
+	0x38, 0x1b, 0xa6, 0x10, 0xd9, 0x6e, 0xb8, 0x5f, 0x3e, 0x0b, 0x6a, 0x2e, 0x22, 0x26, 0xee, 0x1b,
+	0x9f, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xcd, 0x07, 0xa4, 0x84, 0xdb, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -252,6 +351,7 @@ const _ = grpc.SupportPackageIsVersion4
 type ProducersvcClient interface {
 	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumReply, error)
 	Concat(ctx context.Context, in *ConcatRequest, opts ...grpc.CallOption) (*ConcatReply, error)
+	Produce(ctx context.Context, in *ProduceRequest, opts ...grpc.CallOption) (*ProduceReply, error)
 }
 
 type producersvcClient struct {
@@ -280,10 +380,20 @@ func (c *producersvcClient) Concat(ctx context.Context, in *ConcatRequest, opts 
 	return out, nil
 }
 
+func (c *producersvcClient) Produce(ctx context.Context, in *ProduceRequest, opts ...grpc.CallOption) (*ProduceReply, error) {
+	out := new(ProduceReply)
+	err := c.cc.Invoke(ctx, "/pb.Producersvc/Produce", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProducersvcServer is the server API for Producersvc service.
 type ProducersvcServer interface {
 	Sum(context.Context, *SumRequest) (*SumReply, error)
 	Concat(context.Context, *ConcatRequest) (*ConcatReply, error)
+	Produce(context.Context, *ProduceRequest) (*ProduceReply, error)
 }
 
 // UnimplementedProducersvcServer can be embedded to have forward compatible implementations.
@@ -295,6 +405,9 @@ func (*UnimplementedProducersvcServer) Sum(ctx context.Context, req *SumRequest)
 }
 func (*UnimplementedProducersvcServer) Concat(ctx context.Context, req *ConcatRequest) (*ConcatReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Concat not implemented")
+}
+func (*UnimplementedProducersvcServer) Produce(ctx context.Context, req *ProduceRequest) (*ProduceReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 
 func RegisterProducersvcServer(s *grpc.Server, srv ProducersvcServer) {
@@ -337,6 +450,24 @@ func _Producersvc_Concat_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Producersvc_Produce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProduceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProducersvcServer).Produce(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Producersvc/Produce",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProducersvcServer).Produce(ctx, req.(*ProduceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Producersvc_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.Producersvc",
 	HandlerType: (*ProducersvcServer)(nil),
@@ -348,6 +479,10 @@ var _Producersvc_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Concat",
 			Handler:    _Producersvc_Concat_Handler,
+		},
+		{
+			MethodName: "Produce",
+			Handler:    _Producersvc_Produce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -5,21 +5,21 @@ build:
   tagPolicy:
     sha256: {}
   artifacts:
-    - image: cage1016/gokitconsulk8s-addsvc
+    - image: moizhsu/gokitconsulk8s-addsvc
       custom:
         buildCommand: "make dev_docker_addsvc"
         dependencies:
           paths:
             - cmd/addsvc/main.go
             - pkg/addsvc
-    - image: cage1016/gokitconsulk8s-foosvc
+    - image: moizhsu/gokitconsulk8s-foosvc
       custom:
         buildCommand: "make dev_docker_foosvc"
         dependencies:
           paths:
             - cmd/foosvc/main.go
             - pkg/foosvc
-    - image: cage1016/gokitconsulk8s-router
+    - image: moizhsu/gokitconsulk8s-router
       custom:
         buildCommand: "make dev_docker_router"
         dependencies:
@@ -30,14 +30,14 @@ build:
       context: deployments/k8s/website
       docker:
         dockerfile: DockerFile
+    - image: moizhsu/gokitconsulk8s-producersvc
+      custom:
+        buildCommand: "make dev_docker_producersvc"
+        dependencies:
+          paths:
+            - cmd/producersvc/main.go
+            - pkg/producersvc
 deploy:
   kubectl:
     manifests:
       - ./deployments/k8s/*.yaml
-#  helm:
-#    releases:
-#    - name: gokitconsulk8s-helm
-#      chartPath: deployments/k8s
-#      values:
-#        addsvc.image: cage1016/gokitconsulk8s-addsvc:latest
-#        foosvc.image: cage1016/gokitconsulk8s-foosvc:latest

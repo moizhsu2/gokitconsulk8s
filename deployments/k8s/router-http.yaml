@@ -23,7 +23,7 @@ spec:
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
         "consul.hashicorp.com/connect-service": "router-http"
-        "consul.hashicorp.com/connect-service-upstreams": "addsvc:8021,foosvc:7021,zipkin:9411"
+        "consul.hashicorp.com/connect-service-upstreams": "addsvc:8021,foosvc:7021,producersvc:6021,zipkin:9411"
         "consul.hashicorp.com/connect-service-protocol": "http"
         "consul.hashicorp.com/connect-service-port": "8000"
     spec:
@@ -35,11 +35,13 @@ spec:
               value: localhost:8021
             - name: QS_FOOSVC_URL
               value: localhost:7021
+            - name: QS_PRODUCERSVC_URL
+              value: localhost:6021
             - name: QS_ROUTER_HTTP_PORT
               value: "8000"
             - name: QS_ZIPKIN_V2_URL
               value: http://localhost:9411/api/v2/spans
-          image: cage1016/gokitconsulk8s-router
+          image: moizhsu/gokitconsulk8s-router
           name: router-http
           resources: {}
       restartPolicy: Always

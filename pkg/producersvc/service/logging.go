@@ -9,7 +9,7 @@ import (
 )
 
 type loggingMiddleware struct {
-	logger log.Logger    `json:""`
+	logger log.Logger         `json:""`
 	next   ProducersvcService `json:""`
 }
 
@@ -35,4 +35,12 @@ func (lm loggingMiddleware) Concat(ctx context.Context, a string, b string) (rs 
 	}(time.Now())
 
 	return lm.next.Concat(ctx, a, b)
+}
+
+func (lm loggingMiddleware) Produce(ctx context.Context, topic, msg string) (rs string, err error) {
+	defer func(begin time.Time) {
+		lm.logger.Log("method", "Produce", "topic", topic, "msg", msg, "err", err)
+	}(time.Now())
+
+	return lm.next.Produce(ctx, topic, msg)
 }

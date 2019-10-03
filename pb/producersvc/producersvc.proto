@@ -10,6 +10,9 @@ service Producersvc {
 
     rpc Concat (ConcatRequest) returns (ConcatReply) {
     }
+
+    rpc Produce (ProduceRequest) returns (ProduceReply) {
+    }
 }
 
 message SumRequest {
@@ -28,6 +31,16 @@ message ConcatRequest {
 }
 
 message ConcatReply {
+    string rs = 1;
+    string err = 2;
+}
+
+message ProduceRequest {
+    string topic = 1;
+    string msg = 2;
+}
+
+message ProduceReply {
     string rs = 1;
     string err = 2;
 }
